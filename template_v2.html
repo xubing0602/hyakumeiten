@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Tablelog Hyakumeiten Map</title>
+    <style>
+      #map {
+        height: 100%;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .custom-info-window-content {
+        max-width: 300px;
+      }
+      .custom-info-window-content img {
+        width: 100%;
+        height: auto;
+      }
+      .custom-info-window-content h3,
+      p {
+        margin: 0;
+      }
+      .checkbox-container {
+        padding: 10px;
+        background-color: #f8f8f8;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id = "filters" class="checkbox-container"></div>
+    <div id="map"></div>
+    <!-- prettier-ignore -->
+    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({key: "AIzaSyAaFVpZPOA89d58t7aKdjlaM6qTKHynx_c", v: "weekly"});</script>
+    <script>
+      const RESTURANS = {{restaurants}};
+
+      const uniqueMainGenres = new Set();
+      for (const restaurant of RESTURANS) {
+          uniqueMainGenres.add(restaurant.main_genre);
+        }
+
+      for (const genre of uniqueMainGenres) {
+          const checkboxContainer = document.createElement("label");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.id = genre;
+          checkbox.checked = false; // Checkbox initially selected by default
+          const checkboxLabel = document.createTextNode(" " + genre + " ");
+          checkboxContainer.appendChild(checkbox);
+          checkboxContainer.appendChild(checkboxLabel);
+          document.querySelector(".checkbox-container").appendChild(checkboxContainer);
+        }      
+      function generateStars(rating) {
+        const fullStars = Math.floor(rating);
+        const decimal = rating - fullStars;
+        let stars = "★".repeat(fullStars);
+        if (decimal > 0) {
+          stars += "☆";
+          stars += "☆".repeat(4 - fullStars);
+        } else {
+          stars += "☆".repeat(5 - fullStars);
+        }
+        return stars;
+      }
+
+      async function initMap() {
+        const { Map } = await google.maps.importLibrary("maps");
+        const { AdvancedMarkerElement, PinElement } = await google.maps.importLibrary("marker");
+        const { InfoWindow } = await google.maps.importLibrary("maps");
+        const { Place } = await google.maps.importLibrary("places");
+        const map = new Map(document.getElementById("map"), {
+          zoom: 13,
+          center: RESTURANS[0],
+          mapId: "DEMO_MAP_ID",
+        });
+
+        let currentInfoWindow = null;
+        var gmarkers1 = [];
+        RESTURANS.forEach((restaurant) => {
+          const infoContent = `
+            <div class="custom-info-window-content">
+              <img src="${restaurant.image}" />
+              <h3>${restaurant.name}</h3>
+              <p style="color: #f4a460; font-size: 16px;">
+                ${generateStars(restaurant.rating)}
+                <span style="color: #666; font-size: 14px;">(${restaurant.rating} / ${restaurant.rating_users})</span>
+              </p>
+                <p style="color: #666; font-size: 14px;">${restaurant.genre}</p>
+                <p style="color: #666; font-size: 14px;">${restaurant.price_range}</p>
+              <a href="${restaurant.url}" target="_blank">Visit on Tabelog</a>
+            </div>
+          `;
+
+          const infoWindow = new InfoWindow({
+            content: infoContent,
+          });
+        //   const beachFlagImg = document.createElement("img");
+        //   beachFlagImg.src = "https://d2py3gk9dukd01.cloudfront.net/assets/hyakumeiten2024/categories/ramen-d2c6c04e224831657c071eb7426e645f266c4496daaa2bbe6e9f3ddb648205eb.png";
+        //   beachFlagImg.width = 40
+        //   beachFlagImg.height = 40
+
+          const marker = new AdvancedMarkerElement({
+            map: map,
+            position: { lat: restaurant.lat, lng: restaurant.lng },
+            title: restaurant.main_genre,
+            // content: beachFlagImg,
+          });
+          gmarkers1.push(marker)
+          marker.addListener("click", () => {
+            if (currentInfoWindow) {
+              currentInfoWindow.close();
+            }
+            currentInfoWindow = infoWindow;
+            infoWindow.open({
+              anchor: marker,
+              map,
+            });
+          });
+        });
+
+      
+        function getCheckedGenres() {
+        const checkboxes = document.querySelectorAll('#filters input[type="checkbox"]:checked');
+        const checkedGenres = Array.from(checkboxes).map(checkbox => checkbox.id);
+        console.log(checkedGenres);
+        return checkedGenres;
+      }
+      // Filter markers based on checkbox selection
+      function filterMarkers() {
+        const checkedGenres = getCheckedGenres();
+
+        gmarkers1.forEach(marker => {
+          const genre = marker.title; // Assuming you've stored the restaurant object in the marker
+          // marker.setVisible(checkedGenres.includes(genre));
+          if (checkedGenres.includes(genre)) {
+            marker.map = map; // Show marker
+          } else {
+            marker.map = null; // Hide marker
+          } 
+        });
+      }
+      // Attach event listeners to checkboxes
+      document.querySelectorAll('#filters input[type="checkbox"]').forEach(checkbox => {
+          checkbox.addEventListener('change', () => {
+            filterMarkers();
+          });
+      }); 
+      filterMarkers();       
+      }
+      initMap();
+    </script>
+    </select>
+  </body>
+</html>
