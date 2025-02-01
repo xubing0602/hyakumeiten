@@ -2,61 +2,111 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <link rel="stylesheet" href="index.css">
     <title>Tablelog Hyakumeiten Map</title>
     <style>
       #map {
         height: 100%;
       }
-      html,
-      body {
+      html, body {
         height: 100%;
         margin: 0;
         padding: 0;
-      }
-      .custom-info-window-content {
-        max-width: 300px;
-      }
-      .custom-info-window-content img {
-        width: 100%;
-        height: auto;
-      }
-      .custom-info-window-content h3,
-      p {
-        margin: 0;
-      }
-      .checkbox-container {
-        padding: 10px;
-        background-color: #f8f8f8;
-        border-bottom: 1px solid #ddd;
       }
     </style>
   </head>
 
   <body>
-    <div id = "filters" class="checkbox-container"></div>
+    <div class="tab">
+      <button class="tab-toggle">Filters</button>
+      <form id="filters" class="checkbox-wrapper-40">
+        <h3 style="font-family:'Arial'">Filter by Genre</h3> 
+        <!-- Genre filters will be added here -->
+      </form>
+      <form id="region-filters" class="checkbox-wrapper-40">
+        <h3 style="font-family:'Arial'">Filter by Region</h3>
+        <!-- Region filters will be added here -->
+      </form>
+    </div>
     <div id="map"></div>
-    <!-- prettier-ignore -->
-    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-        ({key: "AIzaSyAaFVpZPOA89d58t7aKdjlaM6qTKHynx_c", v: "weekly"});</script>
+    <!-- Google Maps API Script -->
+    <script>
+      (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+      ({key: "AIzaSyAaFVpZPOA89d58t7aKdjlaM6qTKHynx_c", v: "weekly"});
+    </script>
     <script>
       const RESTURANS = {{restaurants}};
 
+      // Get unique genres and regions
       const uniqueMainGenres = new Set();
+      const uniqueRegions = new Set();
       for (const restaurant of RESTURANS) {
           uniqueMainGenres.add(restaurant.main_genre);
-        }
-
+          uniqueRegions.add(restaurant.address_region);
+      }
+      // Array.from(uniqueMainGenres).sort((a, b) => a.localeCompare(b))
       for (const genre of uniqueMainGenres) {
           const checkboxContainer = document.createElement("label");
           const checkbox = document.createElement("input");
+          const br = document.createElement("br");
           checkbox.type = "checkbox";
           checkbox.id = genre;
-          checkbox.checked = false; // Checkbox initially selected by default
+          checkbox.className = "checkboxes"; // Changed from checkbox.class
+          checkbox.checked = false;
           const checkboxLabel = document.createTextNode(" " + genre + " ");
           checkboxContainer.appendChild(checkbox);
+          checkboxContainer.style = "font-family:'Arial'";
           checkboxContainer.appendChild(checkboxLabel);
-          document.querySelector(".checkbox-container").appendChild(checkboxContainer);
-        }      
+          checkboxContainer.appendChild(br);
+          document.querySelector(".checkbox-wrapper-40").appendChild(checkboxContainer);
+      }
+      // Add region checkboxes similar to genre checkboxes
+      for (const region of uniqueRegions) {
+            const checkboxContainer = document.createElement("label");
+            const checkbox = document.createElement("input");
+            const br = document.createElement("br");
+            checkbox.type = "checkbox";
+            checkbox.id = region;
+            checkbox.className = "region-checkboxes";
+            checkbox.checked = false;
+            const checkboxLabel = document.createTextNode(" " + region + " ");
+            checkboxContainer.appendChild(checkbox);
+            checkboxContainer.style = "font-family:'Arial'";
+            checkboxContainer.appendChild(checkboxLabel);
+            checkboxContainer.appendChild(br);
+            document.querySelector("#region-filters").appendChild(checkboxContainer);
+      }
+      // Add Select All checkbox
+      const selectAllContainer = document.createElement("label");
+      const selectAllCheckbox = document.createElement("input");
+      const selectAllBr = document.createElement("br");
+      selectAllCheckbox.type = "checkbox";
+      selectAllCheckbox.id = "selectAll";
+      selectAllCheckbox.checked = false;
+      const selectAllLabel = document.createTextNode(" Select All ");
+      selectAllContainer.appendChild(selectAllCheckbox);
+      selectAllContainer.style = "font-family:'Arial'";
+      selectAllContainer.appendChild(selectAllLabel);
+      selectAllContainer.appendChild(selectAllBr);
+      const heading = document.querySelector(".checkbox-wrapper-40 h3");
+      heading.parentNode.insertBefore(selectAllContainer, heading.nextSibling);
+
+      // Add Select All for regions
+      const selectAllRegionsContainer = document.createElement("label");
+      const selectAllRegionsCheckbox = document.createElement("input");
+      const selectAllRegionsBr = document.createElement("br");
+      selectAllRegionsCheckbox.type = "checkbox";
+      selectAllRegionsCheckbox.id = "selectAllRegions";
+      selectAllRegionsCheckbox.checked = false;
+      const selectAllRegionsLabel = document.createTextNode(" Select All ");
+      selectAllRegionsContainer.appendChild(selectAllRegionsCheckbox);
+      selectAllRegionsContainer.style = "font-family:'Arial'";
+      selectAllRegionsContainer.appendChild(selectAllRegionsLabel);
+      selectAllRegionsContainer.appendChild(selectAllRegionsBr);
+      const regionHeading = document.querySelector("#region-filters h3");
+      regionHeading.parentNode.insertBefore(selectAllRegionsContainer, regionHeading.nextSibling);
+
       function generateStars(rating) {
         const fullStars = Math.floor(rating);
         const decimal = rating - fullStars;
@@ -105,13 +155,47 @@
         //   beachFlagImg.src = "https://d2py3gk9dukd01.cloudfront.net/assets/hyakumeiten2024/categories/ramen-d2c6c04e224831657c071eb7426e645f266c4496daaa2bbe6e9f3ddb648205eb.png";
         //   beachFlagImg.width = 40
         //   beachFlagImg.height = 40
+              // Create a color mapping for genres
+      const genreColors = {};
+      const colors = [
+        "#FF9999", // Soft Red
+        "#90EE90", // Soft Green
+        "#ADD8E6", // Soft Blue
+        "#FFFACD", // Soft Yellow
+        "#FFB6C1", // Soft Pink
+        "#E0FFFF", // Soft Cyan
+        "#FFDAB9", // Soft Orange
+        "#DDA0DD", // Soft Purple
+        "#98FB98", // Soft Light Green
+        "#FFC0CB", // Soft Pink
+        "#B0C4DE", // Soft Indigo
+        "#DEB887"  // Soft Brown
+      ];
 
-          const marker = new AdvancedMarkerElement({
+        // Assign colors to genres
+        let colorIndex = 0;
+        uniqueMainGenres.forEach(genre => {
+          genreColors[genre] = colors[colorIndex % colors.length];
+          colorIndex++;
+        });
+        
+        const marker = new AdvancedMarkerElement({
             map: map,
             position: { lat: restaurant.lat, lng: restaurant.lng },
-            title: restaurant.main_genre,
+            title: restaurant.name,
+            content: new PinElement({
+              background: genreColors[restaurant.main_genre],
+              borderColor: "#000000", // Black border for contrast
+              glyphColor: "#FFFFFF"   // White glyph/dot
+            }).element
             // content: beachFlagImg,
           });
+          // Add custom properties to store additional restaurant data
+          marker.restaurantData = {
+            main_genre: restaurant.main_genre,
+            address_region: restaurant.address_region,
+            // Add any other attributes you need
+          };
           gmarkers1.push(marker)
           marker.addListener("click", () => {
             if (currentInfoWindow) {
@@ -126,26 +210,76 @@
         });
 
       
-        function getCheckedGenres() {
-        const checkboxes = document.querySelectorAll('#filters input[type="checkbox"]:checked');
-        const checkedGenres = Array.from(checkboxes).map(checkbox => checkbox.id);
-        console.log(checkedGenres);
-        return checkedGenres;
+      // Update the filtering functions
+      function getCheckedGenres() {
+          const checkboxes = document.querySelectorAll('#filters input[type="checkbox"]:checked:not(#selectAll)');
+          return Array.from(checkboxes).map(checkbox => checkbox.id);
       }
-      // Filter markers based on checkbox selection
-      function filterMarkers() {
-        const checkedGenres = getCheckedGenres();
 
-        gmarkers1.forEach(marker => {
-          const genre = marker.title; // Assuming you've stored the restaurant object in the marker
-          // marker.setVisible(checkedGenres.includes(genre));
-          if (checkedGenres.includes(genre)) {
-            marker.map = map; // Show marker
-          } else {
-            marker.map = null; // Hide marker
-          } 
-        });
+      function getCheckedRegions() {
+          const checkboxes = document.querySelectorAll('#region-filters input[type="checkbox"]:checked:not(#selectAllRegions)');
+          return Array.from(checkboxes).map(checkbox => checkbox.id);
       }
+
+      function filterMarkers() {
+          const checkedGenres = getCheckedGenres();
+          const checkedRegions = getCheckedRegions();
+          
+          gmarkers1.forEach(marker => {
+              const genre = marker.restaurantData.main_genre;
+              const region = marker.restaurantData.address_region;
+              
+              const genreMatch = checkedGenres.length === 0 || checkedGenres.includes(genre);
+              const regionMatch = checkedRegions.length === 0 || checkedRegions.includes(region);
+              
+              marker.map = (genreMatch && regionMatch) ? map : null;
+          });
+      }
+
+      // Add event listener for Select All
+      selectAllCheckbox.addEventListener('change', function() {
+          const checkboxes = document.getElementsByClassName('checkboxes');
+          Array.from(checkboxes).forEach(checkbox => {
+              checkbox.checked = this.checked;
+          });
+          // Trigger the filter update
+          filterMarkers();
+      });
+
+      // Add Select All functionality for regions
+      selectAllRegionsCheckbox.addEventListener('change', function() {
+          const checkboxes = document.getElementsByClassName('region-checkboxes');
+          Array.from(checkboxes).forEach(checkbox => {
+              checkbox.checked = this.checked;
+          });
+          filterMarkers();
+      });
+
+      // Update individual checkbox behavior to uncheck "Select All" when needed
+      document.querySelectorAll('.checkboxes').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+              const allCheckboxes = document.getElementsByClassName('checkboxes');
+              const selectAllCheckbox = document.getElementById('selectAll');
+              selectAllCheckbox.checked = Array.from(allCheckboxes).every(cb => cb.checked);
+          });
+      });
+            
+      // Update region checkboxes to handle Select All state
+      document.querySelectorAll('.region-checkboxes').forEach(checkbox => {
+          checkbox.addEventListener('change', function() {
+              const allCheckboxes = document.getElementsByClassName('region-checkboxes');
+              const selectAllRegionsCheckbox = document.getElementById('selectAllRegions');
+              selectAllRegionsCheckbox.checked = Array.from(allCheckboxes).every(cb => cb.checked);
+          });
+      });
+
+      // Add event listeners for region checkboxes
+      document.querySelectorAll('#region-filters input[type="checkbox"]').forEach(checkbox => {
+          checkbox.addEventListener('change', () => {
+            filterMarkers();
+          });
+      }); 
+
       // Attach event listeners to checkboxes
       document.querySelectorAll('#filters input[type="checkbox"]').forEach(checkbox => {
           checkbox.addEventListener('change', () => {
@@ -157,5 +291,16 @@
       initMap();
     </script>
     </select>
+
+    <script>
+      // Add tab toggle functionality
+      const tab = document.querySelector('.tab');
+      const toggleButton = document.querySelector('.tab-toggle');
+      
+      toggleButton.addEventListener('click', () => {
+        tab.classList.toggle('collapsed');
+        toggleButton.textContent = tab.classList.contains('collapsed') ? 'Show Filters' : 'Hide Filters';
+      });
+    </script>
   </body>
 </html>
