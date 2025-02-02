@@ -183,13 +183,13 @@
           colorIndex++;
         });
         const marker = new AdvancedMarkerElement({
-            map: map,
+            map: null,
             position: { lat: restaurant.lat, lng: restaurant.lng },
             title: restaurant.name,
             content: new PinElement({
               background: genreColors[restaurant.main_genre],
-              borderColor: "#000000", // Black border for contrast
-              glyphColor: "#FFFFFF"   // White glyph/dot
+              // borderColor: "#000000", // Black border for contrast
+              // glyphColor: "#FFFFFF"   // White glyph/dot
             }).element
             // content: beachFlagImg,
           });
@@ -228,6 +228,9 @@
           const checkedGenres = getCheckedGenres();
           const checkedRegions = getCheckedRegions();
           
+          // Only show markers if at least one filter is selected
+          const hasActiveFilters = checkedGenres.length > 0 || checkedRegions.length > 0;
+          
           gmarkers1.forEach(marker => {
               const genre = marker.restaurantData.main_genre;
               const region = marker.restaurantData.address_region;
@@ -235,7 +238,7 @@
               const genreMatch = checkedGenres.length === 0 || checkedGenres.includes(genre);
               const regionMatch = checkedRegions.length === 0 || checkedRegions.includes(region);
               
-              marker.map = (genreMatch && regionMatch) ? map : null;
+              marker.map = (hasActiveFilters && genreMatch && regionMatch) ? map : null;
           });
       }
 
