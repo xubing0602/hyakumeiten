@@ -6,7 +6,8 @@ ranking_suffix = '/?Srt=D&SrtT=rt'
 hyakumeiten_genre_class_list = ['hyakumeiten-new-genre__target', 'hyakumeiten-cassette__target','hyakumeiten-cassette__twoareas-target', 'hyakumeiten-cassette__area-target', 
                                 'hyakumeiten-cassette__fourareas-target', 'hyakumeiten-new-genre__2area-new-east', 'hyakumeiten-new-genre__2area-new-west', 
                                               'hyakumeiten-new-genre__6area-new-hokkaido', 'hyakumeiten-new-genre__6area-new-tokyo', 'hyakumeiten-new-genre__6area-new-kanagawa', 'hyakumeiten-new-genre__6area-new-osaka',
-                                              'hyakumeiten-new-genre__6area-new-east', 'hyakumeiten-new-genre__6area-new-west']
+                                              'hyakumeiten-new-genre__6area-new-east', 'hyakumeiten-new-genre__6area-new-west', "hyakumeiten-new-genre__7area-new-hokkaido", 'hyakumeiten-new-genre__7area-new-tokyo',
+                                            "hyakumeiten-new-genre__7area-new-kanagawa", 'hyakumeiten-new-genre__7area-new-osaka', 'hyakumeiten-new-genre__7area-new-east', 'hyakumeiten-new-genre__7area-new-west', "hyakumeiten-new-genre__7area-new-aichi",]
 
 
 col_list = ['restaurant_name', 'rating', 'main_genre', 'address_region', 'address_locality', 'address_street', 'closest_station', 

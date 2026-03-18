@@ -9,7 +9,7 @@ import time
 from config import *
 df_res = pd.read_csv(HYAKUMEITEN_OUTPUT_PATH)[['name', 'tabelog_site', 'lat', 'lng', 'address_region', 'main_genre', 'genre', 'price_range', 'rating_users', 'rating', 'image']]
 df_res = df_res.rename(columns={'tabelog_site': 'url'})
-# df_res = df_res[df_res.address_region != '東京都' ]
+df_res = df_res[df_res.address_region.isin(['東京都', '長野県', '茨城県', '栃木県', '群馬県'])]
 res_json = df_res.to_json(orient='records')
 
 
@@ -18,6 +18,6 @@ with open('../template_v2.html','r') as file:
     filedata = filedata.replace('{{restaurants}}', res_json)
 
 
-with open('../index.html','w') as file:
+with open('../index_kanto.html','w') as file:
     file.write(filedata)
 
