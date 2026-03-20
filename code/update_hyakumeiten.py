@@ -34,19 +34,38 @@ def update_output(path, session=None, max_workers=8, delay=0.5):
     df_old_indexed = df_old.set_index('tabelog_site')
     df_new_indexed = df_new.set_index('tabelog_site')
 
-    # columns to update: use col_list from config
-    cols_to_update = [c for c in df_new.columns if c != 'tabelog_site']
+    # columns to update: use col_list from config, skip prev columns
+    cols_to_update = [c for c in df_new.columns if c not in ('tabelog_site', 'prev_rating', 'prev_rating_users', 'prev_save_users')]
 
-    for site, row in df_new_indexed.iterrows():
-        if site in df_old_indexed.index:
-            for c in cols_to_update:
-                # skip prev columns
-                if c in ('prev_rating', 'prev_rating_users', 'prev_save_users'):
-                    continue
-                df_old_indexed.at[site, c] = row.get(c)
-        else:
-            # new site: append
-            df_old_indexed.loc[site] = [row.get(c) for c in df_old_indexed.columns]
+    # Sync data types: ensure df_new matches df_old's dtypes to avoid TypeErrors
+    for col in cols_to_update:
+        if col in df_old_indexed.columns:
+            try:
+                df_new_indexed[col] = df_new_indexed[col].astype(df_old_indexed[col].dtype)
+            except (ValueError, TypeError):
+                # If conversion fails, convert to common safe type (object or numeric)
+                if pd.api.types.is_numeric_dtype(df_old_indexed[col].dtype):
+                    df_new_indexed[col] = pd.to_numeric(df_new_indexed[col], errors='coerce')
+                else:
+                    df_new_indexed[col] = df_new_indexed[col].astype('object')
+
+    # Find existing and new sites using set operations (faster than iterating)
+    existing_sites = df_new_indexed.index.intersection(df_old_indexed.index)
+    new_sites = df_new_indexed.index.difference(df_old_indexed.index)
+
+    # Update existing sites using vectorized operation
+    if len(existing_sites) > 0:
+        df_old_indexed.loc[existing_sites, cols_to_update] = df_new_indexed.loc[existing_sites, cols_to_update]
+
+    # Add new sites efficiently using concat instead of row-by-row assignment
+    if len(new_sites) > 0:
+        df_new_for_append = df_new_indexed.loc[new_sites].copy()
+        # Ensure all columns from df_old_indexed exist in df_new_for_append, fill missing with NaN
+        for col in df_old_indexed.columns:
+            if col not in df_new_for_append.columns:
+                df_new_for_append[col] = None
+        # Append new rows with proper column order
+        df_old_indexed = pd.concat([df_old_indexed, df_new_for_append[df_old_indexed.columns]], ignore_index=False)
 
     # reset index
     df_updated = df_old_indexed.reset_index()

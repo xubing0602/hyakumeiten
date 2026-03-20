@@ -1,5 +1,6 @@
 
 from bs4 import BeautifulSoup
+import sys
 import pandas as pd
 import json
 import time
@@ -15,8 +16,8 @@ sub_site_list = soup.find_all('a', {'class': hyakumeiten_genre_class_list})
 sub_site_list = [sub_site.attrs['href'] for sub_site in sub_site_list]
 
 ## define start and end
-start = 15
-end = 16
+start = int(sys.argv[1]) 
+end = int(sys.argv[2])
 
 ## generate restaurant list for each sub url
 
